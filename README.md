@@ -1,14 +1,11 @@
-# devnet-template
-This provides a template repository for creating or importing repos in the CiscoDevNet organization on GitHub.com. 
+# cisco-sna-helper-utilities
 
-Please use this template as a guide to creating a repo that encourages contributions and shows thoughtful maintenance strategies.  
+This repo contains helper utilities for users of Cisco Secure Network Analytics (SNA). 
 
-The `CODE_OF_CONDUCT.md` reflects our standards for interaction. 
+Distinct utilities are currently provided in individual subfolders, in which utility-specific READMEs offer instructions for their use. 
 
-The `CONTRIBUTING.md` file instructs new contributors on how to communicate with the project maintainers, report issues, provide pull requests, reviewing contributions, and how to version control releases.
-
-The `LICENSE` file should contain the license you intend for the source code in the repo. 
-
-The `SECURITY.md` file describes security policies and procedures including reporting a security-related bug and the policy on disclosure. 
-
-The `AGENTS.md` file contains a template for guiding AI agents that work with your repository.
+For more information about the project, please see:
+- `AGENTS.md`: Guidance for AI coding agents working in this repository.
+- `CODE_OF_CONDUCT.md`: Community standards for participation.
+- `CONTRIBUTING.md`: Contribution and collaboration guidance.
+- `SECURITY.md`: Security reporting and disclosure guidance.

@@ -1,7 +1,7 @@
 # Secure Network Analytics (SNA) Appliance Identity Certificate Rotation Exemplar Script
 
-This script is a standalone, exemplar/starter script that installs of a provided identity certificate to SNA appliances. 
-It's primary use is to install a single/shared identity certificate to multiple SNA appliances in a deployment.
+This script is a standalone, exemplar/starter script that installs a provided identity certificate to SNA appliances. 
+Its primary use is to install a single/shared identity certificate to multiple SNA appliances in a deployment.
 
 When running the script, the user provides a PKCS12 file and a list of appliances (by FQDN) on which to install the 
 identity certificate bundle. The script can optionally poll the SNA deployment for completion of certificate rotation. 

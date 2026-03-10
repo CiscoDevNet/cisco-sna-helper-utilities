@@ -1,58 +1,75 @@
-**AGENTS.md is a simple, open format for guiding AI agents that works with your repository.**
-
-> Edit the following template to provide users with a better experience when working with coding agents (VS Code, GitHub Copilot, Cursor, Codex, Gemini CLI, etc.).
-
-Provide the agent with information on which documentation and/or OpenAPI spec document to use.  
-For example, you can paste a direct link to the latest OpenAPI spec. 
-Direct link for Cisco Secure Access Authorization API:
-https://pubhub.devnetcloud.com/media/cloud-security-apis-in-eft/docs/secure-access/reference/auth/cisco_secure_access_token_authorization_api_2_0_0.yaml 
-
-Add information about the MCP servers needed for the project.
-
-You can add a link to the Cisco DevNet sandbox needed to work with the project. 
-Choose the direct link from the list here: https://devnetsandbox.cisco.com/DevNet
-
-Additionally, you can provide information about the version and link to the SDK, Infrastructure as Code provider/module, etc., which is recommended for use by coding Agents.
-
-Example of AGENTS.md file at Cisco DevNet GitHub org: [https://github.com/CiscoDevNet/python_code_samples_network/blob/master/AGENTS.md](https://github.com/CiscoDevNet/python_code_samples_network/blob/master/AGENTS.md)
-
-Example of AGENTS.md file at The Apache Software Foundation org: [https://github.com/apache/airflow/blob/main/AGENTS.md](https://github.com/apache/airflow/blob/main/AGENTS.md)
-
-**How to test AGENTS.md?**
-* You can test it with your favorite coding agents (VS Code, GitHub Copilot, Cursor, Codex, Gemini CLI, etc.).
-* Clone the repository containing the updated AGENTS.md and request guidance, such as: `How do I run this project with the [specified parameters]?`
-
-# Template:
-
 ## Dev environment tips
 
-- **Python version**: Use Python 3.9+.
+- **Python version**: Use Python 3.13+.
 - **Virtual env (recommended)**:
   ```bash
   python3 -m venv .venv
   source .venv/bin/activate
   python -m pip install -U pip
   ```
+- **Each helper utility is standalone**: cd into a helper utility directory, read its `README.md`, install that folder’s `requirements.txt` if present, then run the script. Ask for approval before running the script, including indicating what arguments you will provide.
+- **Install dependencies (pattern)**:
+  ```bash
+  cd <helper-utility-folder>
+  [ -f requirements.txt ] && python -m pip install -r requirements.txt
+  ```
 
 ### Quick run examples
 
+- **cert_rotation_client**
+  ```bash
+  cd cert_rotation_client
+  python -m pip install -r requirements.txt
+  export REQUESTS_CA_BUNDLE=<path-to-root-CA-cert>
+  export USERNAME=<username>
+  export PASSWORD=<password>
+  python update-identity.py -m <manager-address> -f <certificate-pfx-bundle> -p <pfx-password> --fqdns <selected-appliances>
+  ```
+
+- **truststore_client**
+  ```bash
+  cd cert_rotation_client
+  python -m pip install -r requirements.txt
+  export REQUESTS_CA_BUNDLE=<path-to-root-CA-cert>
+  export USERNAME=<username>
+  export PASSWORD=<password>
+  python update-truststores.py -m <manager-address> -f <pem-certificate-to-check> --fqdns all --action check
+  ```
 
 ## Testing instructions
 
-- **MCP server links**
+- **There is no test suite** yet in this repository.
+- **Static checks (optional)**: If you add new Python code, you can run lightweight checks:
+  ```bash
+  python -m pip install ruff mypy
+  ruff check .
+  mypy --ignore-missing-imports .
+  ```
 
 - **Test the code with the Cisco DevNet sandbox**
-  
-  Visit https://devnetsandbox.cisco.com/DevNet to book a related sandbox.
-  
+  Visit https://devnetsandbox.cisco.com/DevNet to book a related sandbox
+
 - **Latest Cisco API documentation**:
-  
-  https://developer.cisco.com/docs/
+  https://developer.cisco.com/docs/. Note that some of the helper utilities use APIs that have not yet been publicly documented.
+
 
 ## PR instructions
 
+- **Title format**: `[helper-utility-folder] <Short description>` (e.g., `[cert_rotation_client] added dry run option`).
+- **Scope**: Keep changes limited to one folder when possible. If you cross-cut multiple folders, explain why in the PR description.
+- **Before committing**:
+  - If you added deps, include or update that folder’s `requirements.txt`.
+  - Update `README.md` within the affected folder.
+  - Run optional linters:
+    ```bash
+    ruff check .
+    ```
 - **Security**: Do not commit real credentials or tokens. Use placeholders and document required env vars or files.
 
 ## Contribution conventions
 
+- **Coding style**: Prefer clear, readable Python with descriptive variable names and early returns. Avoid catching exceptions without handling.
+- **Inputs**: Prefer acquiring credentials through environment variables. For other script parameters, utilize argparse.
+- **Outputs**: Print concise results or JSON. Avoid noisy logs; add `-v/--verbose` and/or `-d/--debug` only if needed.
+- **Dependencies**: Pin major versions when practical in per-folder `requirements.txt`.
 - **Backward compatibility**: Do not change existing sample behavior unless clearly improving or fixing a bug; document changes.
