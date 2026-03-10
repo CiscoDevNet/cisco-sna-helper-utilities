@@ -1,0 +1,8 @@
+# Default reviewers group
+* @grmaclea
+
+# cert_rotation_client reviewers group
+/cert_rotation_client/ @grmaclea
+
+# truststore_client reviewers group
+/truststore_client/ @grmaclea
