@@ -2,7 +2,16 @@
 
 This repo contains helper utilities for users of Cisco Secure Network Analytics (SNA). 
 
-Distinct utilities are currently provided in individual subfolders, in which utility-specific READMEs offer instructions for their use. 
+Distinct utilities are currently provided in individual subfolders, where READMEs and dependency files can be found for each tool.
+
+### Available Utilities
+
+| Utility                                        | Description                                                                                                                                                                                         |
+|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [cert_rotation_client](./cert_rotation_client) | This utility automates the installation of a provided identity certificate on specified SNA appliances. View its [README](./cert_rotation_client/README.md) for more details.                       |
+| [truststore_client](./truststore_client)       | This utility facilitates the management of SNA appliance Trust Stores, including addition, removal, and listing of certificates. View its [README](./truststore_client/README.md) for more details. |
+
+### Project Information
 
 For more information about the project, please see:
 - `AGENTS.md`: Guidance for AI coding agents working in this repository.
