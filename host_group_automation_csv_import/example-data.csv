@@ -1,0 +1,6 @@
+host_group,ip_ranges
+Engineering,"10.10.1.0/24,10.10.2.10"
+Engineering/Test Environment,2001:abc:def::/48
+Finance,10.20.0.0/16
+Research,2001:db8:abcd::/48
+BadData,1.2.3.4.5
