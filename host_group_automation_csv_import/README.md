@@ -6,42 +6,58 @@ Group Automation API on an SNA Manager (SMC).
 ## Requirements
 
 - An SMC running version 7.6.1 or later.
-- An SMC user with the Configuration Manager or Primary Admin Web Role.
+- Credentials for an SMC user account with the Power Analyst or Primary Admin Web Role.
 - Network connectivity to the SNA Manager.
 - Python 3.13 or later.
+- `pip` for installing Python packages.
+- The Python `venv` module for creating a virtual environment.
+- A local CA bundle that trusts the SNA Manager's identity certificate. If one is unavailable, you can disable TLS
+  verification with `--disable-tls-verify`.
 
 ## Setup
 
-Create a virtual environment and install the utility's dependency:
+Download or copy `import_csv_host_groups.py`, `requirements.txt`, and the CSV data you want to import to the system
+where you will run the import script. Then create a virtual environment and install the utility's dependency:
 
 ```shell
-cd host_group_automation_csv_import
+cd <directory-containing-the-utility-files>
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -U pip
-python -m pip install -r requirements.txt
+python3 -m pip install -U pip
+python3 -m pip install -r requirements.txt
 ```
 
-Configure `requests` to trust the root CA for the SNA Manager's identity certificate, then provide credentials through
-environment variables:
+Before running the import, configure `requests` to trust the root CA for the SNA Manager's identity certificate:
 
 ```shell
 export REQUESTS_CA_BUNDLE=<path-to-root-CA-certificate>
+```
+
+If a CA bundle is unavailable, add `--disable-tls-verify` to the command in the Usage section. This disables certificate 
+validation. Make sure you are aware of the security implications of disabling certificate verification before doing so.
+
+Provide credentials through environment variables:
+
+```shell
 export SNA_USERNAME=<username>
 export SNA_PASSWORD=<password>
 ```
 
-To use another credential source, replace the `get_credentials` function.
+To use another credential source other than environment variables, replace the `get_credentials` function.
 
 ## CSV Format
 
-The default column names are `host_group` and `ip_ranges`. Forward slashes in `host_group` values create nested groups.
-When a row contains multiple IP ranges, enclose the comma-separated value in quotation marks.
+The CSV file must have a valid header row containing the columns configured by `hostGroupNameSourceColumn` and
+`ipRangesSourceColumn`. The default column names are `host_group` and `ip_ranges`; header names must match the 
+configured names exactly.
 
-See [`example-data.csv`](./example-data.csv) for a sample. Its final `BadData` row is intentionally invalid so the
-response demonstrates how dropped rows are reported.
+Forward slashes in `host_group` values create nested groups, e.g. "Engineering/Test Environment" will create a
+host group named "Test Environment" under a host group named "Engineering." 
 
-The CSV file used **must contain a header row**.
+When a row contains multiple IP ranges, enclose the comma-separated value in quotation marks, e.g. "1.2.3.4,5.6.7.8"
+
+See [`example-data.csv`](./example-data.csv) for a sample. Its final `BadData` row is intentionally invalid so the response 
+demonstrates how dropped rows are reported.
 
 ## Usage
 
@@ -49,11 +65,12 @@ Before running the script, edit `CONFIG` in `import_csv_host_groups.py` for the 
 corresponding optional arguments when you run the script. An argument overrides its `CONFIG` value for that run; when an
 argument is omitted, the value in `CONFIG` is used.
 
-At a minimum, set `domainId` to the ID shown on the Domain Properties page in SNA and review `parentHostGroupName` and
-`hostGroupName`. The default `domainId` is intentionally invalid so an import cannot accidentally target the wrong domain.
+At a minimum, set `domainId` to the ID shown on the Domain Properties page on the SMC for the domain you are targeting.
+Choose `parentHostGroupName` (`Inside Hosts` or `Outside Hosts`) and `hostGroupName` (the container for imported groups).
+If your CSV uses different headers, set `hostGroupNameSourceColumn` and `ipRangesSourceColumn` to match them.
 
 ```shell
-./import_csv_host_groups.py \
+python3 import_csv_host_groups.py \
   --smc sna-manager.example.com \
   --file example-data.csv \
   --domain-id 301 \
@@ -106,7 +123,7 @@ conflict.
 ### Authentication or Authorization Failures
 
 For authentication failures, verify `SNA_USERNAME` and `SNA_PASSWORD` and confirm that the SNA Manager permits non-SSO sign-in.
-For authorization failures during import, confirm that the account has the Configuration Manager or Primary Admin Web Role.
+For authorization failures during import, confirm that the account has the Power Analyst or Primary Admin Web Role.
 
 ## Details About Host Group Creation
 
