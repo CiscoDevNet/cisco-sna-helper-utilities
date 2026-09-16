@@ -1,8 +1,14 @@
 # Default reviewers group
-* @grmaclea
+* @grmaclea @JoshLitt
 
 # cert_rotation_client reviewers group
 /cert_rotation_client/ @grmaclea
 
 # truststore_client reviewers group
 /truststore_client/ @grmaclea
+
+# hga reviewers group
+/host_group_automation_csv_import/ @travis-bittel
+
+# splunk utils reviewers group
+/splunk_flow_export/ @pzheng869437
