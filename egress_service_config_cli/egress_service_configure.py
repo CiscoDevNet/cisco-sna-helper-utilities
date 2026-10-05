@@ -29,6 +29,8 @@ DEFAULT_TIMEOUT_SECONDS = 30
 AUTHENTICATE_PATH = "/token/v2/authenticate"
 SERVICE_ROUTE = "/svc-ndr-adapter"
 XSRF_COOKIE_NAME = "XSRF-TOKEN"
+# The 7.6.1 API echoes updated values, including secrets, in PATCH responses.
+SECRET_KEYS = {"sasl_password", "hec_token"}
 
 
 class ApiError(Exception):
@@ -148,8 +150,20 @@ def call_api(
         raise ApiError("Cannot reach FC at {}: {}".format(fc, exc.reason))
 
 
+def redact_secrets(value: Any) -> Any:
+    """Return a copy of a JSON value with secret fields masked."""
+    if isinstance(value, dict):
+        return {
+            key: "********" if key in SECRET_KEYS else redact_secrets(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [redact_secrets(item) for item in value]
+    return value
+
+
 def print_response(response: ApiResponse, quiet: bool = False) -> None:
-    """Print the HTTP status and formatted JSON response."""
+    """Print the HTTP status and formatted JSON response, with secrets masked."""
     if quiet:
         if not response.ok:
             print("HTTP {}".format(response.status_code), file=sys.stderr)
@@ -157,7 +171,7 @@ def print_response(response: ApiResponse, quiet: bool = False) -> None:
         print("HTTP {}".format(response.status_code))
 
     try:
-        print(json.dumps(response.json(), indent=2))
+        print(json.dumps(redact_secrets(response.json()), indent=2))
     except (ValueError, KeyError):
         print(response.body)
 
@@ -340,8 +354,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     syslog_parser = subparsers.add_parser("syslog", help="Configure the syslog exporter")
     syslog_parser.add_argument("--destinations",
-                               help="Comma-separated host:port destinations, e.g. 10.1.2.3:514,10.1.2.4:514")
-    syslog_parser.add_argument("--format", choices=["csv", "json"], help="Syslog record format")
+                               help="host:port destination, e.g. 10.1.2.3:514. If you list several "
+                                    "(comma-separated), each one receives every flow.")
+    syslog_parser.add_argument("--format", choices=["csv", "json"],
+                               help="Syslog record format (default on a new install: csv). "
+                                    "If omitted, the current FC setting is kept.")
     enable_group = syslog_parser.add_mutually_exclusive_group()
     enable_group.add_argument("--enable", action="store_true", help="Enable the syslog exporter")
     enable_group.add_argument("--disable", action="store_true", help="Disable the syslog exporter")

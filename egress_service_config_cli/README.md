@@ -50,7 +50,9 @@ runs this script. As a fallback, pass `--disable-tls-verify` to skip TLS certifi
 for that run only.
 
 If you do not set `SVC_NDR_ADAPTER_USERNAME` or `SVC_NDR_ADAPTER_PASSWORD`, the script
-prompts for them interactively (the password prompt does not echo input).
+prompts for them interactively (the password prompt does not echo input). The prompt is the
+safest option: a password passed with `--password` or typed into an `export` command is kept
+in shell history.
 
 ## Usage
 
@@ -75,7 +77,7 @@ HTTP 200
 
 ### Show the currently enabled exporter
 
-Query which exporter (syslog, kafka, splunk) is active, without exposing credentials:
+Query which exporter (csv, syslog, kafka, splunk) is active, without exposing credentials:
 
 ```shell
 ./egress_service_configure.py status
@@ -105,7 +107,7 @@ Set the syslog destination, format, and enable the exporter in a single command:
 
 ```shell
 ./egress_service_configure.py syslog \
-  --destinations 10.1.2.3:514,10.1.2.4:514 \
+  --destinations 10.1.2.3:514 \
   --format csv \
   --enable
 ```
@@ -116,8 +118,11 @@ Expected output:
 HTTP 200
 {
   "updated": {
+    "flow_adapter": {
+      "enabled_exporters": "syslog"
+    },
     "syslog": {
-      "destinations": "10.1.2.3:514,10.1.2.4:514",
+      "destinations": "10.1.2.3:514",
       "format": "csv",
       "enabled": "true"
     }
@@ -127,6 +132,14 @@ HTTP 200
 
 `--destinations`, `--format`, `--enable`, and `--disable` can be combined or used
 individually. At least one must be provided.
+
+`--format` accepts `csv` (the default on a new install) or `json`. If you omit it, the format
+already configured on the FC is kept, so the examples set it explicitly to make the result
+predictable. Use `--format json` if your receiver expects JSON.
+
+Syslog is sent over UDP, one flow per message. If you list more than one destination, each
+receives every flow. Only one exporter can be enabled at a time; if another exporter is
+enabled, run `reset` first.
 
 ### Set an arbitrary configuration value
 
@@ -138,6 +151,10 @@ by the `syslog` convenience command:
   --set kafka.bootstrap_servers=broker1:9092,broker2:9092 \
   --set kafka.topic=flow-records
 ```
+
+Avoid passing secrets such as `kafka.sasl_password` or `splunk.hec_token` with `--set`:
+command-line arguments are kept in shell history and visible to other users in the process
+list. The script masks these values in the printed response.
 
 ### Reset configuration
 
@@ -255,14 +272,13 @@ The exit code is non-zero when the API returns an error status.
 ### TLS Verification Failures
 
 Most FCs use self-signed certificates. Pass `--disable-tls-verify` to skip validation.
-Using this option will not impact the security of your SNA deployment, but will prevent
-this script from verifying the FC's identity. Ensure you understand the security
-implications of doing so.
+This prevents the script from verifying the FC's identity, so your admin credentials could
+be sent to an impostor on an untrusted network. Prefer adding the FC certificate to your
+local trust store.
 
 ### 401 Unauthorized
 
-Confirm the FC address, username, and password are correct, and that the account is active
-and permits non-SSO sign-in.
+Confirm the FC address, username, and password are correct.
 
 ### 403 Forbidden
 
@@ -273,6 +289,9 @@ Service API.
 
 Confirm the section, key, and value are supported. Use the supported values table above
 and the Egress Service API documentation included with your SNA release for reference.
+
+If you are enabling an exporter while a different one is still enabled, the request is
+rejected with this error. Run `./egress_service_configure.py reset`, then retry.
 
 ### No flow records received by syslog
 
