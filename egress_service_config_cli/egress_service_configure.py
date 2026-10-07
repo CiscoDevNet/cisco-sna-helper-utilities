@@ -253,6 +253,17 @@ def cmd_configure_syslog(
     args: argparse.Namespace,
 ) -> int:
     """Configure the syslog exporter."""
+    if args.disable:
+        # The 7.6.1 API rejects a PATCH that clears enabled_exporters, so disable
+        # through reset. The service clears enabled_exporters only when syslog is
+        # the configured exporter, so a different exporter is never disabled.
+        response = call_api(
+            cookie_jar, fc, xsrf_token, "POST", "/api/v1/config/reset", ssl_context,
+            json_body={"section": "syslog", "key": "enabled"},
+        )
+        print_response(response, quiet=args.quiet)
+        return 0 if response.ok else 1
+
     syslog_updates: Dict[str, str] = {}
     updates: Dict[str, Dict[str, str]] = {}
     if args.destinations:
@@ -262,21 +273,6 @@ def cmd_configure_syslog(
     if args.enable:
         syslog_updates["enabled"] = "true"
         updates["flow_adapter"] = {"enabled_exporters": "syslog"}
-    if args.disable:
-        syslog_updates["enabled"] = "false"
-        # Only clear enabled_exporters if syslog is the active exporter,
-        # to avoid disabling a different exporter type.
-        should_clear = True
-        status_resp = call_api(cookie_jar, fc, xsrf_token, "GET", "/api/v1/config", ssl_context)
-        if status_resp.ok:
-            try:
-                enabled = status_resp.json().get("enabled_exporter")
-                if enabled is not None and enabled != "syslog":
-                    should_clear = False
-            except (ValueError, KeyError):
-                pass
-        if should_clear:
-            updates["flow_adapter"] = {"enabled_exporters": ""}
 
     updates["syslog"] = syslog_updates
     response = call_api(
@@ -385,6 +381,8 @@ def validate_command_args(args: argparse.Namespace) -> Optional[str]:
     if args.command == "syslog":
         if not (args.destinations or args.format or args.enable or args.disable):
             return "Nothing to do: provide --destinations, --format, --enable, or --disable"
+        if args.disable and (args.destinations or args.format):
+            return "--disable cannot be combined with --destinations or --format"
     return None
 
 

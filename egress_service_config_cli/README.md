@@ -14,7 +14,8 @@ This API was introduced in SNA 7.6.1.
 
 - An FC running the Egress Service (`svc-ndr-adapter`), reachable over HTTPS from where you run
   this script.
-- An FC user with the Master Admin web role.
+- The FC's built-in `admin` user. Other users are not supported, even if they have the
+  Master Admin web role.
 - Network connectivity from the client host to the FC on HTTPS (port 443).
 - Python 3.9 or later on the machine running this script (not on the FC).
 
@@ -32,7 +33,7 @@ arguments on each command:
 
 ```shell
 export SVC_NDR_ADAPTER_FC=<FC_IP_or_hostname>
-export SVC_NDR_ADAPTER_USERNAME=<admin-username>
+export SVC_NDR_ADAPTER_USERNAME=admin
 export SVC_NDR_ADAPTER_PASSWORD=<admin-password>
 ```
 
@@ -130,8 +131,18 @@ HTTP 200
 }
 ```
 
-`--destinations`, `--format`, `--enable`, and `--disable` can be combined or used
-individually. At least one must be provided.
+`--destinations`, `--format`, and `--enable` can be combined or used individually. At least
+one option must be provided.
+
+To stop syslog export, run:
+
+```shell
+./egress_service_configure.py syslog --disable
+```
+
+`--disable` uses the reset API: it sets `syslog.enabled` to `false` and, if syslog is the
+enabled exporter, clears `enabled_exporters`. It does not change another enabled exporter and
+cannot be combined with `--destinations` or `--format`.
 
 `--format` accepts `csv` (the default on a new install) or `json`. If you omit it, the format
 already configured on the FC is kept, so the examples set it explicitly to make the result
@@ -282,8 +293,8 @@ Confirm the FC address, username, and password are correct.
 
 ### 403 Forbidden
 
-Confirm the authenticated user has the Master Admin web role required to call the Egress
-Service API.
+Confirm you are signing in as the FC's built-in `admin` user. Other users are not supported,
+even if they have the Master Admin web role.
 
 ### 400 Invalid configuration request
 
