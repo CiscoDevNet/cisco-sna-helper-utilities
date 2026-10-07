@@ -18,6 +18,10 @@ This API was introduced in SNA 7.6.1.
   Master Admin web role.
 - Network connectivity from the client host to the FC on HTTPS (port 443).
 - Python 3.9 or later on the machine running this script (not on the FC).
+- Analytics file generation enabled on the FC. This is a one-time setup in the SMC:
+  **Configure > Flow Collectors >** select the FC **> Advanced > Support Settings**, set
+  `enable_analytics_files` to `1`, then **Save** and **Synchronize**. Without this setting the
+  Egress Service has no flow data to export, even when an exporter is configured.
 
 ## Setup
 
@@ -310,7 +314,9 @@ rejected with this error. Run `./egress_service_configure.py reset`, then retry.
    `"enabled_exporter": "syslog"`.
 2. Confirm the destination is reachable from the FC and the configured port accepts UDP
    traffic.
-3. Confirm there is active traffic flowing through the FC (the Egress Service only exports
+3. Confirm `enable_analytics_files` is set to `1` in the FC's Support Settings and the FC has
+   been synchronized (see [Requirements](#requirements)).
+4. Confirm there is active traffic flowing through the FC (the Egress Service only exports
    records when the FC is processing flows).
 
 ### Health check fails
