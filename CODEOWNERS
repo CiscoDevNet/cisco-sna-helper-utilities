@@ -12,3 +12,6 @@
 
 # splunk utils reviewers group
 /splunk_flow_export/ @pzheng869437
+
+# egress config cli reviewers group
+/egress_service_config_cli/ @pzheng869437 @coder03
